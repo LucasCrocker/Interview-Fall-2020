@@ -41,6 +41,41 @@ export class Launches {
     }
   }
 
+  public async getLaunchesByRange(start: string, end: string): Promise<ILaunch[]> {
+    try {
+      // Get the date as a moment object
+      const dateAsMomentStart = moment(start, 'YYYY');
+      const dateAsMomentEnd = moment(end, 'YYYY');
+
+      // Check that the date string is valid, and that the date is before or equal to today's date
+      // moment() creates a moment with today's date
+      if (!dateAsMomentStart.isValid() || !dateAsMomentStart.isSameOrBefore(moment())) {
+        return [{ error: 'invalid start year' }];
+      }
+      if (!dateAsMomentEnd.isValid() || !dateAsMomentEnd.isSameOrBefore(moment())) {
+        return [{ error: 'invalid end year' }];
+      }
+
+      var array = new Array();
+      var i:number; 
+      i = 0;
+      while (dateAsMomentStart <= dateAsMomentEnd) {
+        const parsed = await this.requestLaunchesByYear(dateAsMomentStart.format('YYYY'));
+        array[i] = this.filterFields(parsed);
+        dateAsMomentStart.add(1, 'y');
+        i++;
+      }
+      return this.filterFields(array);
+    } catch (e) {
+      console.log(e);
+      return [
+        {
+          error: `There was an error retrieving this launch`,
+        },
+      ];
+    }
+  }
+
   /**
    * Makes the api request for launches per year
    * @param year
